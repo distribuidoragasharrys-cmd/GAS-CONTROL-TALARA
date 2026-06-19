@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Gas | Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Menu principal">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M12 3h8v4l3 3v17a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2V10l3-3V3Z"></path>
+            <path d="M12 7h8"></path>
+          </svg>
+        </div>
+        <div>
+          <span>Distribuidora</span>
+          <strong>Harrys</strong>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <a class="nav-link active" href="{{ url_for('dashboard', fecha=selected_date) }}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-link" href="#pedidoForm">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6z"></path><path d="M9 7h6"></path><path d="M9 11h6"></path><path d="M9 15h4"></path></svg>
+          <span>Pedidos</span>
+        </a>
+        <a class="nav-link" href="#movementsTable">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-2 8H8L6 6Z"></path><path d="M6 6 5 3H2"></path><path d="M9 20h.01"></path><path d="M18 20h.01"></path></svg>
+          <span>Ventas</span>
+        </a>
+        <a class="nav-link" href="#gastoForm">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"></path><path d="M8 7V5h8v2"></path><path d="M8 13h8"></path></svg>
+          <span>Gastos</span>
+        </a>
+        <a class="nav-link" href="#repartidoresPanel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>Repartidores</span>
+        </a>
+        <a class="nav-link" href="#inventarioForm">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v4H9z"></path><path d="M8 7h8l2 3v11H6V10l2-3Z"></path><path d="M10 14h4"></path></svg>
+          <span>Inventario</span>
+        </a>
+        <a class="nav-link" href="#movementsTable">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg>
+          <span>Reportes</span>
+        </a>
+      </nav>
+
+      <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+      <button class="logout" type="submit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17 15 12l-5-5"></path><path d="M15 12H3"></path><path d="M14 4h5v16h-5"></path></svg>
+        <span>Cerrar sesion</span>
+      </button>
+      </form>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <button class="icon-button menu-button" type="button" aria-label="Abrir menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
+          </button>
+          <div>
+            <p class="eyebrow">Panel operativo</p>
+            <h1>Dashboard</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="date-chip">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3"></path><path d="M17 3v3"></path><path d="M4 8h16"></path><path d="M5 5h14v16H5z"></path></svg>
+            <span id="todayLabel">{{ date_label }}</span>
+          </div>
+          <form class="date-filter" action="{{ url_for('dashboard') }}" method="get">
+            <input class="form-control" type="date" name="fecha" value="{{ selected_date }}" aria-label="Filtrar por fecha">
+            <button class="primary-button" type="submit">Filtrar</button>
+          </form>
+          <button class="user-menu" type="button">
+            <span class="avatar">A</span>
+            <span>Administrador</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="summary-grid" aria-label="Resumen principal">
+        <article class="metric-card metric-income">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>
+          </div>
+          <div>
+            <span>Ingresos del dia</span>
+            <strong id="incomeToday">{{ metrics.income_today|soles }}</strong>
+            <small id="salesTodaySmall">{{ metrics.sales_today }} ventas del dia</small>
+          </div>
+        </article>
+
+        <article class="metric-card metric-expense">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+          </div>
+          <div>
+            <span>Egresos del dia</span>
+            <strong id="expenseToday">{{ metrics.expense_today|soles }}</strong>
+            <small>Gastos registrados</small>
+          </div>
+        </article>
+
+        <article class="metric-card metric-profit">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v11H4z"></path><path d="M7 7V5h10v2"></path><path d="M16 13h4"></path></svg>
+          </div>
+          <div>
+            <span>Ganancia del dia</span>
+            <strong id="profitToday">{{ metrics.profit_today|soles }}</strong>
+            <small>Precio venta - costo</small>
+          </div>
+        </article>
+
+        <article class="metric-card metric-stock">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v4H9z"></path><path d="M8 7h8l2 3v11H6V10l2-3Z"></path><path d="M10 14h4"></path></svg>
+          </div>
+          <div>
+            <span>Stock actual</span>
+            <strong id="stockCurrent">{{ metrics.stock }}</strong>
+            <small id="loanedSmall">{{ metrics.loaned_total }} balones prestados</small>
+          </div>
+        </article>
+      </section>
+
+      <section class="account-overview" aria-label="Resumen de cuentas">
+        <article class="panel accounts-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Control de cuentas</p>
+              <h2>Saldos del dia</h2>
+            </div>
+            <span class="trend-pill" id="accountBalanceTotal">{{ account_summary.saldo_total|soles }}</span>
+          </div>
+          <div class="account-ledger">
+            <div class="account-totals">
+              <div>
+                <span>Saldo inicial</span>
+                <strong id="accountInitialTotal">{{ account_summary.saldo_inicial_total|soles }}</strong>
+              </div>
+              <div>
+                <span>Ingresos a cuentas</span>
+                <strong class="positive" id="accountIncomeMovements">{{ account_summary.ingresos|soles }}</strong>
+              </div>
+              <div>
+                <span>Salidas de cuentas</span>
+                <strong class="negative" id="accountExpenseMovements">{{ account_summary.egresos|soles }}</strong>
+              </div>
+              <div>
+                <span>Saldo actual</span>
+                <strong id="accountCurrentTotal">{{ account_summary.saldo_total|soles }}</strong>
+              </div>
+            </div>
+            <div class="account-flow" aria-label="Grafico de ingresos y salidas">
+              <div>
+                <span>Ingresos</span>
+                <i id="accountIncomeBar" style="width: 0%"></i>
+              </div>
+              <div>
+                <span>Salidas</span>
+                <i class="outflow" id="accountExpenseBar" style="width: 0%"></i>
+              </div>
+            </div>
+            <div class="account-list" id="accountsList"></div>
+          </div>
+        </article>
+      </section>
+
+      <datalist id="driversList">
+        {% for driver in drivers %}
+          <option value="{{ driver.nombre }}"></option>
+        {% endfor %}
+      </datalist>
+
+      <section class="forms-grid" id="formularios" aria-label="Formularios de registro">
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Pedidos</p>
+              <h2>Nuevo pedido</h2>
+            </div>
+          </div>
+          <form id="pedidoForm" action="{{ url_for('registrar_pedido') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoFecha">Fecha</label>
+                <input class="form-control" id="pedidoFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoCantidad">Cantidad</label>
+                <input class="form-control order-calculator" id="pedidoCantidad" name="cantidad" type="number" min="1" step="1" value="1" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="pedidoProducto">Producto</label>
+                <select class="form-select order-calculator" id="pedidoProducto" name="producto" required>
+                  <optgroup label="Gas">
+                    <option value="BALON DE GAS 10 KG">BALON DE GAS 10 KG</option>
+                    <option value="CARGA DE GAS 10 KG">CARGA DE GAS 10 KG</option>
+                    <option value="BALON DE GAS 45 KG">BALON DE GAS 45 KG</option>
+                    <option value="CARGA DE GAS 45 KG">CARGA DE GAS 45 KG</option>
+                  </optgroup>
+                  <optgroup label="Agua">
+                    <option value="BIDON DE AGUA">BIDON DE AGUA</option>
+                    <option value="CARGA DE AGUA">CARGA DE AGUA</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="col-12" id="pedidoValveGroup">
+                <label class="form-label" for="pedidoTipoValvula">Valvula</label>
+                <select class="form-select" id="pedidoTipoValvula" name="tipo_valvula">
+                  <option value="VALVULA NORMAL">VALVULA NORMAL</option>
+                  <option value="VALVULA PREMIUM">VALVULA PREMIUM</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoCliente">Cliente</label>
+                <input class="form-control" id="pedidoCliente" name="cliente" type="text" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoTelefono">Telefono</label>
+                <input class="form-control" id="pedidoTelefono" name="telefono" type="text">
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="pedidoDireccion">Direccion</label>
+                <input class="form-control" id="pedidoDireccion" name="direccion" type="text" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoCosto">Costo producto</label>
+                <input class="form-control order-calculator" id="pedidoCosto" name="costo_producto" type="number" min="0" step="0.01" value="{{ daily_price.costo_balon }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoPrecio">Precio venta</label>
+                <input class="form-control order-calculator" id="pedidoPrecio" name="precio_venta" type="number" min="0" step="0.01" value="{{ daily_price.precio_venta }}" required>
+              </div>
+              <div class="col-12">
+                <div class="section-divider">Producto adicional opcional</div>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pedidoProductoExtra">Producto adicional</label>
+                <select class="form-select order-calculator" id="pedidoProductoExtra" name="producto_extra">
+                  <option value="">Sin producto adicional</option>
+                  <optgroup label="Gas">
+                    <option value="BALON DE GAS 10 KG">BALON DE GAS 10 KG</option>
+                    <option value="CARGA DE GAS 10 KG">CARGA DE GAS 10 KG</option>
+                    <option value="BALON DE GAS 45 KG">BALON DE GAS 45 KG</option>
+                    <option value="CARGA DE GAS 45 KG">CARGA DE GAS 45 KG</option>
+                  </optgroup>
+                  <optgroup label="Agua">
+                    <option value="BIDON DE AGUA">BIDON DE AGUA</option>
+                    <option value="CARGA DE AGUA">CARGA DE AGUA</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="col-sm-6" id="pedidoValveExtraGroup">
+                <label class="form-label" for="pedidoTipoValvulaExtra">Valvula adicional</label>
+                <select class="form-select order-calculator" id="pedidoTipoValvulaExtra" name="tipo_valvula_extra">
+                  <option value="VALVULA NORMAL">VALVULA NORMAL</option>
+                  <option value="VALVULA PREMIUM">VALVULA PREMIUM</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="pedidoCantidadExtra">Cantidad adicional</label>
+                <input class="form-control order-calculator" id="pedidoCantidadExtra" name="cantidad_extra" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="pedidoCostoExtra">Costo adicional</label>
+                <input class="form-control order-calculator" id="pedidoCostoExtra" name="costo_producto_extra" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="pedidoPrecioExtra">Precio adicional</label>
+                <input class="form-control order-calculator" id="pedidoPrecioExtra" name="precio_venta_extra" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-12">
+                <div class="calculation-strip">
+                  <span>Total pedido: <strong id="newOrderTotalPreview">S/ 0.00</strong></span>
+                  <span>Ganancia: <strong id="newOrderProfitPreview">S/ 0.00</strong></span>
+                  <span>Tipo: <strong id="newOrderTypePreview">Gas</strong></span>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="pedidoObservaciones">Observaciones</label>
+                <input class="form-control" id="pedidoObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar pedido</button>
+          </form>
+        </article>
+
+        <article class="panel workflow-panel wide-panel" id="pedidosPanel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Flujo operativo</p>
+              <h2>Lista de pedidos</h2>
+            </div>
+            <a class="primary-button export-link" href="{{ url_for('exportar_reporte', modulo='pedidos', fecha=selected_date) }}">Exportar pedidos</a>
+          </div>
+          <div class="workflow-stats">
+            <div>
+              <span>Pendientes</span>
+              <strong id="ordersPending">{{ orders.counts.pendiente }}</strong>
+            </div>
+            <div>
+              <span>En ruta</span>
+              <strong id="ordersRoute">{{ orders.counts.en_ruta }}</strong>
+            </div>
+            <div>
+              <span>Entregados</span>
+              <strong id="ordersDelivered">{{ orders.counts.entregado }}</strong>
+            </div>
+            <div>
+              <span>Liquidados</span>
+              <strong id="ordersSettled">{{ orders.counts.liquidado }}</strong>
+            </div>
+            <div>
+              <span>Anulados</span>
+              <strong id="ordersCancelled">{{ orders.counts.anulado }}</strong>
+            </div>
+          </div>
+          <div class="quick-filters sticky-filters">
+            <label>
+              <span>Estado</span>
+              <select class="form-select form-select-sm" id="orderFilterStatus">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en_ruta">En ruta</option>
+                <option value="entregado">Entregado</option>
+                <option value="liquidado">Liquidado</option>
+                <option value="anulado">Anulado</option>
+              </select>
+            </label>
+            <label>
+              <span>Repartidor</span>
+              <input class="form-control form-control-sm" id="orderFilterDriver" type="search" placeholder="Buscar">
+            </label>
+            <label>
+              <span>Fecha</span>
+              <input class="form-control form-control-sm" id="orderFilterDate" type="date" value="{{ selected_date }}">
+            </label>
+          </div>
+          <div class="table-wrap compact-table">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Cliente</th>
+                  <th>Direccion</th>
+                  <th>Producto</th>
+                  <th>Importe</th>
+                  <th>Estado</th>
+                  <th>Repartidor</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel form-panel wide-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Pedidos</p>
+              <h2>Gestion rapida</h2>
+            </div>
+          </div>
+          <form id="gestionPedidoForm" action="{{ url_for('gestionar_pedido') }}" method="post" class="dashboard-form">
+            <input type="hidden" name="fecha" value="{{ selected_date }}">
+            <input type="hidden" name="accion_pedido" value="liquidar">
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label" for="gestionPedido">Pedido</label>
+                <select class="form-select liquidation-calculator" id="gestionPedido" name="pedido_id" required>
+                  <option value="" data-total="0" data-efectivo="0">Seleccionar pedido</option>
+                  {% for pedido in orders.latest %}
+                    {% if pedido.estado in ["pendiente", "en_ruta", "entregado"] %}
+                      <option value="{{ pedido.id }}" data-total="{{ pedido.total_venta or (pedido.precio_venta * pedido.cantidad) }}" data-repartidor="{{ pedido.repartidor }}" data-estado="{{ pedido.estado }}">#{{ pedido.id }} - {{ pedido.cliente }} / {{ pedido.items_resumen }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label" for="gestionRepartidor">Repartidor</label>
+                <input class="form-control" id="gestionRepartidor" name="repartidor" type="text" list="driversList">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_efectivo">Efectivo</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_efectivo" name="pago_efectivo" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_yape">Yape</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_yape" name="pago_yape" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_yape_marcos">Yape Marcos</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_yape_marcos" name="pago_yape_marcos" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_plin">Plin</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_plin" name="pago_plin" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_fise">FISE</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_fise" name="pago_fise" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_fise_20">FISE S/ 20</label>
+                <input class="form-control liquidation-calculator" id="liq_fise_20" name="fise_20_cantidad" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_fise_43">FISE S/ 43</label>
+                <input class="form-control liquidation-calculator" id="liq_fise_43" name="fise_43_cantidad" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_pago_fiado">Fiado</label>
+                <input class="form-control liquidation-calculator" id="liq_pago_fiado" name="pago_fiado" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="liq_vuelto_yape">Vuelto por Yape</label>
+                <input class="form-control liquidation-calculator" id="liq_vuelto_yape" name="vuelto_yape" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="liq_dinero_entregado">Dinero entregado</label>
+                <input class="form-control liquidation-calculator" id="liq_dinero_entregado" name="dinero_entregado" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="gestionObservaciones">Observaciones</label>
+                <input class="form-control" id="gestionObservaciones" name="observaciones" type="text">
+              </div>
+              <div class="col-12">
+                <div class="calculation-strip liquidation-strip">
+                  <span>Total vendido: <strong id="orderTotalPreview">S/ 0.00</strong></span>
+                  <span>Total cobrado: <strong id="orderCollectedPreview">S/ 0.00</strong></span>
+                  <span>Saldo pendiente: <strong id="orderPendingPreview">S/ 0.00</strong></span>
+                  <span>Diferencia rep.: <strong id="orderDifferencePreview">S/ 0.00</strong></span>
+                  <span>FISES: <strong id="orderFisePreview">0 / S/ 0.00</strong></span>
+                  <span>Vuelto Yape: <strong id="orderYapeChangePreview">S/ 0.00</strong></span>
+                </div>
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Liquidar pedido</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Precio variable</p>
+              <h2>Precio del dia</h2>
+            </div>
+          </div>
+          <form id="precioForm" action="{{ url_for('registrar_precio') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="precioFecha">Fecha</label>
+                <input class="form-control" id="precioFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="precioCosto">Costo balon</label>
+                <input class="form-control" id="precioCosto" name="costo_balon" type="number" min="0" step="0.01" value="{{ daily_price.costo_balon }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="precioVentaDia">Precio venta</label>
+                <input class="form-control" id="precioVentaDia" name="precio_venta" type="number" min="0" step="0.01" value="{{ daily_price.precio_venta }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="precioObservaciones">Nota</label>
+                <input class="form-control" id="precioObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Guardar precio</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Cuentas diarias</p>
+              <h2>Saldos iniciales</h2>
+            </div>
+          </div>
+          <form id="saldosForm" action="{{ url_for('registrar_saldos_cuentas') }}" method="post" class="dashboard-form">
+            <input type="hidden" name="fecha" value="{{ selected_date }}">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_bcp">BCP</label>
+                <input class="form-control" id="saldo_bcp" name="saldo_bcp" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('bcp', 0) }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_interbank">Interbank</label>
+                <input class="form-control" id="saldo_interbank" name="saldo_interbank" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('interbank', 0) }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_fise">Cuenta FISE</label>
+                <input class="form-control" id="saldo_fise" name="saldo_fise" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('fise', 0) }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_caja">Efectivo caja</label>
+                <input class="form-control" id="saldo_caja" name="saldo_caja" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('caja', 0) }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_yape">Yape</label>
+                <input class="form-control" id="saldo_yape" name="saldo_yape" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('yape', 0) }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="saldo_plin">Plin</label>
+                <input class="form-control" id="saldo_plin" name="saldo_plin" type="number" min="0" step="0.01" value="{{ account_summary.initial_values.get('plin', 0) }}">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Guardar saldos</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Stock diario</p>
+              <h2>Inicio del dia</h2>
+            </div>
+          </div>
+          <form id="stockDiarioForm" action="{{ url_for('registrar_stock_diario') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="stockFecha">Fecha</label>
+                <input class="form-control" id="stockFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="inicio_llenos">Llenos iniciales</label>
+                <input class="form-control" id="inicio_llenos" name="inicio_llenos" type="number" min="0" step="1" value="{{ stock_control.inicio_llenos or inventory.llenos }}" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="stockObservaciones">Observaciones</label>
+                <input class="form-control" id="stockObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Guardar inicio</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Gas</p>
+              <h2>Ingreso de llenos</h2>
+            </div>
+          </div>
+          <form id="ingresoGasForm" action="{{ url_for('registrar_ingreso_gas') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="ingresoGasFecha">Fecha</label>
+                <input class="form-control" id="ingresoGasFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="cantidadIngresoGas">Balones llenos que llegan</label>
+                <input class="form-control" id="cantidadIngresoGas" name="cantidad_ingreso" type="number" min="1" step="1" required>
+              </div>
+              <div class="col-12">
+                <div class="calculation-strip single-strip">
+                  <span>Stock actual: <strong id="gasStockBefore">{{ inventory.llenos }}</strong></span>
+                  <span>Entradas mes: <strong id="inventoryInSmall">{{ inventory.entradas_mes }}</strong></span>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="ingresoGasObservaciones">Observaciones</label>
+                <input class="form-control" id="ingresoGasObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar ingreso</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Prestamos</p>
+              <h2>Prestar balon</h2>
+            </div>
+          </div>
+          <form id="prestamoForm" action="{{ url_for('registrar_prestamo') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="prestamoFecha">Fecha</label>
+                <input class="form-control" id="prestamoFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="prestamoCantidad">Cantidad</label>
+                <input class="form-control" id="prestamoCantidad" name="cantidad" type="number" min="1" step="1" value="1" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="prestamoCliente">Cliente / mayorista</label>
+                <input class="form-control" id="prestamoCliente" name="cliente" type="text" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="tipo_cliente">Tipo</label>
+                <select class="form-select" id="tipo_cliente" name="tipo_cliente">
+                  <option value="cliente">Cliente</option>
+                  <option value="mayorista">Mayorista</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="tipo_balon">Balon</label>
+                <select class="form-select" id="tipo_balon" name="tipo_balon">
+                  <option value="lleno">Lleno</option>
+                  <option value="vacio">Vacio</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="prestamoObservaciones">Observaciones</label>
+                <input class="form-control" id="prestamoObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar prestamo</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Control de caja</p>
+              <h2>Nuevo gasto</h2>
+            </div>
+          </div>
+          <form id="gastoForm" action="{{ url_for('registrar_gasto') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="gastoFecha">Fecha</label>
+                <input class="form-control" id="gastoFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="gastoMonto">Monto</label>
+                <input class="form-control" id="gastoMonto" name="monto" type="number" min="0" step="0.01" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="concepto">Concepto</label>
+                <input class="form-control" id="concepto" name="concepto" type="text" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="categoria">Categoria</label>
+                <select class="form-select" id="categoria" name="categoria">
+                  <option value="Combustible">Combustible</option>
+                  <option value="Planilla">Planilla</option>
+                  <option value="Servicios">Servicios</option>
+                  <option value="Compras">Compras</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="gastoObservaciones">Observaciones</label>
+                <input class="form-control" id="gastoObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar gasto</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Repartidores</p>
+              <h2>Registrar entrega</h2>
+            </div>
+          </div>
+          <form id="pagoRepartidorForm" action="{{ url_for('registrar_pago_repartidor') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="pagoFecha">Fecha</label>
+                <input class="form-control" id="pagoFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="pagoMonto">Dinero entregado</label>
+                <input class="form-control" id="pagoMonto" name="monto" type="number" min="0" step="0.01" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="pagoRepartidor">Repartidor</label>
+                <input class="form-control" id="pagoRepartidor" name="repartidor" type="text" list="driversList" required>
+              </div>
+              <div class="col-12">
+                <div class="calculation-strip liquidation-strip">
+                  <span>Debe entregar: <strong id="driverExpectedPreview">S/ 0.00</strong></span>
+                  <span>Entregando: <strong id="liquidationAmountPreview">S/ 0.00</strong></span>
+                  <span>Diferencia: <strong id="driverDifferencePreview">S/ 0.00</strong></span>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="pagoObservaciones">Observaciones</label>
+                <input class="form-control" id="pagoObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar entrega</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">FISE</p>
+              <h2>FISES por repartidor</h2>
+            </div>
+          </div>
+          <form id="fiseForm" action="{{ url_for('registrar_fises_repartidor') }}" method="post" class="dashboard-form">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="fiseFecha">Fecha</label>
+                <input class="form-control" id="fiseFecha" name="fecha" type="date" value="{{ selected_date }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="fiseRepartidor">Repartidor</label>
+                <input class="form-control" id="fiseRepartidor" name="repartidor" type="text" list="driversList" required>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="cantidadFise20">FISE S/ 20</label>
+                <input class="form-control" id="cantidadFise20" name="fise_20_cantidad" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="cantidadFise43">FISE S/ 43</label>
+                <input class="form-control" id="cantidadFise43" name="fise_43_cantidad" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="cantidadFise">Cantidad manual</label>
+                <input class="form-control" id="cantidadFise" name="cantidad_fise" type="number" min="0" step="1" value="0">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="totalFise">Total FISE</label>
+                <input class="form-control" id="totalFise" name="total_fise" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="fiseObservaciones">Observaciones</label>
+                <input class="form-control" id="fiseObservaciones" name="observaciones" type="text">
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Registrar FISE</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Almacen</p>
+              <h2>Actualizar inventario</h2>
+            </div>
+          </div>
+          <form id="inventarioForm" action="{{ url_for('actualizar_inventario') }}" method="post" class="dashboard-form">
+            <input type="hidden" name="fecha" value="{{ selected_date }}">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="llenos">Llenos</label>
+                <input class="form-control" id="llenos" name="llenos" type="number" min="0" step="1" value="{{ inventory.llenos }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="vacios">Vacios</label>
+                <input class="form-control" id="vacios" name="vacios" type="number" min="0" step="1" value="{{ inventory.vacios }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="prestados_clientes">Prestados clientes</label>
+                <input class="form-control" id="prestados_clientes" name="prestados_clientes" type="number" min="0" step="1" value="{{ inventory.prestados_clientes }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="prestados_mayoristas">Prestados mayoristas</label>
+                <input class="form-control" id="prestados_mayoristas" name="prestados_mayoristas" type="number" min="0" step="1" value="{{ inventory.prestados_mayoristas }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="entradas_mes">Entradas mes</label>
+                <input class="form-control" id="entradas_mes" name="entradas_mes" type="number" min="0" step="1" value="{{ inventory.entradas_mes }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="salidas_mes">Salidas mes</label>
+                <input class="form-control" id="salidas_mes" name="salidas_mes" type="number" min="0" step="1" value="{{ inventory.salidas_mes }}" required>
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Guardar inventario</button>
+          </form>
+        </article>
+
+        <article class="panel form-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Agua</p>
+              <h2>Inventario de agua</h2>
+            </div>
+          </div>
+          <form id="inventarioAguaForm" action="{{ url_for('actualizar_inventario_agua') }}" method="post" class="dashboard-form">
+            <input type="hidden" name="fecha" value="{{ selected_date }}">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="agua_llenos">Bidones llenos</label>
+                <input class="form-control" id="agua_llenos" name="agua_llenos" type="number" min="0" step="1" value="{{ water_inventory.llenos }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="agua_vacios">Bidones vacios</label>
+                <input class="form-control" id="agua_vacios" name="agua_vacios" type="number" min="0" step="1" value="{{ water_inventory.vacios }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="agua_entradas_mes">Entradas mes</label>
+                <input class="form-control" id="agua_entradas_mes" name="agua_entradas_mes" type="number" min="0" step="1" value="{{ water_inventory.entradas_mes }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="agua_salidas_mes">Salidas mes</label>
+                <input class="form-control" id="agua_salidas_mes" name="agua_salidas_mes" type="number" min="0" step="1" value="{{ water_inventory.salidas_mes }}" required>
+              </div>
+            </div>
+            <button class="primary-button form-submit" type="submit">Guardar agua</button>
+          </form>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel wide-panel" id="repartidoresPanel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Control de repartidores</p>
+              <h2>Resumen por repartidor</h2>
+            </div>
+            <span class="trend-pill">{{ date_label }}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="driver-table">
+              <thead>
+                <tr>
+                  <th>Repartidor</th>
+                  <th>Total vendido</th>
+                  <th>Total cobrado</th>
+                  <th>Total pendiente</th>
+                  <th>Debe entregar</th>
+                  <th>Ya entrego</th>
+                  <th>Diferencia</th>
+                  <th>Ganancia</th>
+                  <th>FISE / Vuelto</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="driversTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel liquidation-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Liquidaciones</p>
+              <h2>Entregas del dia</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="liquidationHistoryList"></div>
+        </article>
+
+        <article class="panel fise-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">FISE</p>
+              <h2>FISES del dia</h2>
+            </div>
+          </div>
+          <dl class="month-list">
+            <div><dt>FISE S/ 20</dt><dd id="fise20Count">{{ fise_report.cantidad_20 }}</dd></div>
+            <div><dt>FISE S/ 43</dt><dd id="fise43Count">{{ fise_report.cantidad_43 }}</dd></div>
+            <div><dt>Cantidad</dt><dd id="fiseCount">{{ fise_report.cantidad }}</dd></div>
+            <div><dt>Total FISE</dt><dd id="fiseTotal">{{ fise_report.total|soles }}</dd></div>
+          </dl>
+          <div class="mini-list" id="fiseHistoryList"></div>
+        </article>
+
+        <article class="panel wide-panel" id="fiseLiquidationPanel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Liquidacion de FISES</p>
+              <h2>FISES fisicos pendientes de entrega</h2>
+            </div>
+            <span class="trend-pill">{{ date_label }}</span>
+          </div>
+          <div class="table-wrap compact-table">
+            <table class="credit-table">
+              <thead>
+                <tr>
+                  <th>Repartidor</th>
+                  <th>Fecha</th>
+                  <th>FISE S/ 20</th>
+                  <th>FISE S/ 43</th>
+                  <th>Total FISES</th>
+                  <th>Valor total</th>
+                  <th>Estado</th>
+                  <th>Accion</th>
+                </tr>
+              </thead>
+              <tbody id="fiseLiquidationTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel account-movements-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Cuentas</p>
+              <h2>Movimientos del dia</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="accountMovementsList"></div>
+        </article>
+
+        <article class="panel payment-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Cierre de pagos</p>
+              <h2>Pagos del dia</h2>
+            </div>
+          </div>
+          <dl class="month-list">
+            <div><dt>Efectivo</dt><dd class="positive" id="paymentCash">{{ payment_summary.efectivo|soles }}</dd></div>
+            <div><dt>Yape</dt><dd id="paymentYape">{{ payment_summary.yape|soles }}</dd></div>
+            <div><dt>Yape Marcos</dt><dd id="paymentYapeMarcos">{{ payment_summary.yape_marcos|soles }}</dd></div>
+            <div><dt>Plin</dt><dd id="paymentPlin">{{ payment_summary.plin|soles }}</dd></div>
+            <div><dt>FISE</dt><dd id="paymentFise">{{ payment_summary.fise|soles }}</dd></div>
+            <div><dt>Fiados</dt><dd class="negative" id="paymentCredit">{{ payment_summary.fiado|soles }}</dd></div>
+            <div><dt>Vuelto Yape</dt><dd class="negative" id="paymentYapeChange">{{ payment_summary.vuelto_yape|soles }}</dd></div>
+            <div><dt>Total vendido</dt><dd id="paymentTotal">{{ payment_summary.total|soles }}</dd></div>
+            <div><dt>Cuadre</dt><dd id="paymentStatus">{{ "Correcto" if payment_summary.cuadre else "Revisar" }}</dd></div>
+          </dl>
+        </article>
+
+        <article class="panel wide-panel" id="clientesFiadosPanel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Cobranzas</p>
+              <h2>Clientes fiados</h2>
+            </div>
+            <a class="primary-button export-link" href="{{ url_for('exportar_reporte', modulo='fiados', fecha=selected_date) }}">Exportar fiados</a>
+          </div>
+          <div class="quick-filters sticky-filters">
+            <label>
+              <span>Cliente</span>
+              <input class="form-control form-control-sm" id="creditFilterClient" type="search" placeholder="Buscar cliente">
+            </label>
+            <label>
+              <span>Fecha</span>
+              <input class="form-control form-control-sm" id="creditFilterDate" type="date">
+            </label>
+            <label>
+              <span>Repartidor</span>
+              <input class="form-control form-control-sm" id="creditFilterDriver" type="search" placeholder="Buscar repartidor">
+            </label>
+            <label>
+              <span>Estado</span>
+              <select class="form-select form-select-sm" id="creditFilterStatus">
+                <option value="">Todos</option>
+                <option value="Fiado pendiente">Fiado pendiente</option>
+                <option value="Fiado liquidado">Fiado liquidado</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap compact-table">
+            <table class="credit-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Direccion</th>
+                  <th>Telefono</th>
+                  <th>Fecha</th>
+                  <th>Repartidor</th>
+                  <th>Monto adeudado</th>
+                  <th>Dias atraso</th>
+                  <th>Estado</th>
+                  <th>Accion</th>
+                </tr>
+              </thead>
+              <tbody id="creditClientsTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel product-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Productos</p>
+              <h2>Ventas por producto</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="productSalesList"></div>
+        </article>
+
+        <article class="panel valve-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Valvulas</p>
+              <h2>Ventas por valvula</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="valveSalesList"></div>
+        </article>
+
+        <article class="panel stock-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Control diario</p>
+              <h2>Cuadre de stock</h2>
+            </div>
+          </div>
+          <dl class="month-list">
+            <div><dt>Inicio llenos</dt><dd id="stockStart">{{ stock_control.inicio_llenos if stock_control.inicio_llenos is not none else "Sin registro" }}</dd></div>
+            <div><dt>Ventas</dt><dd id="stockSales">{{ stock_control.ventas }}</dd></div>
+            <div><dt>Prestamos llenos</dt><dd id="stockLoans">{{ stock_control.prestamos_llenos }}</dd></div>
+            <div><dt>Stock final calculado</dt><dd id="stockFinal">{{ stock_control.stock_final if stock_control.stock_final is not none else "-" }}</dd></div>
+            <div><dt>Inventario actual</dt><dd id="stockCurrentCheck">{{ stock_control.inventario_actual }}</dd></div>
+            <div><dt>Estado</dt><dd id="stockStatus">{{ "Cuadra" if stock_control.cuadra else "Revisar" }}</dd></div>
+          </dl>
+        </article>
+
+        <article class="panel table-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Historial de movimientos</p>
+              <h2>Ventas y gastos registrados</h2>
+            </div>
+            <span class="trend-pill">{{ date_label }}</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Movimiento</th>
+                  <th>Tipo</th>
+                  <th>Repartidor</th>
+                  <th>Monto</th>
+                  <th>Ganancia</th>
+                  <th>Observaciones</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="movementsTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel inventory-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Almacen</p>
+              <h2>Inventario actual</h2>
+            </div>
+          </div>
+          <div class="inventory-grid">
+            <div class="inventory-stat">
+              <span class="status-dot green"></span>
+              <strong id="inventoryFull">{{ inventory.llenos }}</strong>
+              <span>Llenos</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot red"></span>
+              <strong id="inventoryEmpty">{{ inventory.vacios }}</strong>
+              <span>Vacios</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot blue"></span>
+              <strong id="inventoryIn">{{ inventory.entradas_mes }}</strong>
+              <span>Entradas mes</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot orange"></span>
+              <strong id="inventoryOut">{{ inventory.salidas_mes }}</strong>
+              <span>Salidas mes</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot blue"></span>
+              <strong id="inventoryLoanClients">{{ inventory.prestados_clientes }}</strong>
+              <span>Prest. clientes</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot orange"></span>
+              <strong id="inventoryLoanWholesalers">{{ inventory.prestados_mayoristas }}</strong>
+              <span>Prest. mayoristas</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel water-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Agua</p>
+              <h2>Inventario de agua</h2>
+            </div>
+          </div>
+          <div class="inventory-grid">
+            <div class="inventory-stat">
+              <span class="status-dot blue"></span>
+              <strong id="waterFull">{{ water_inventory.llenos }}</strong>
+              <span>Llenos</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot red"></span>
+              <strong id="waterEmpty">{{ water_inventory.vacios }}</strong>
+              <span>Vacios</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot green"></span>
+              <strong id="waterIn">{{ water_inventory.entradas_mes }}</strong>
+              <span>Entradas</span>
+            </div>
+            <div class="inventory-stat">
+              <span class="status-dot orange"></span>
+              <strong id="waterOut">{{ water_inventory.salidas_mes }}</strong>
+              <span>Salidas</span>
+            </div>
+          </div>
+          <div class="mini-list" id="waterMovementsList"></div>
+        </article>
+
+        <article class="panel inventory-movements-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Inventario</p>
+              <h2>Movimientos de gas</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="inventoryMovementsList"></div>
+        </article>
+
+        <article class="panel loan-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Prestamos</p>
+              <h2>Balones prestados</h2>
+            </div>
+          </div>
+          <dl class="month-list">
+            <div><dt>Clientes</dt><dd id="loanedClients">{{ loans.clientes }}</dd></div>
+            <div><dt>Mayoristas</dt><dd id="loanedWholesalers">{{ loans.mayoristas }}</dd></div>
+          </dl>
+          <div class="mini-list" id="loansList"></div>
+        </article>
+
+        <article class="panel price-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Historial</p>
+              <h2>Precios de gas</h2>
+            </div>
+          </div>
+          <div class="mini-list" id="priceHistoryList"></div>
+        </article>
+
+        <article class="panel chart-panel wide">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Ventas</p>
+              <h2>Ventas de los ultimos 7 dias</h2>
+            </div>
+            <span class="trend-pill" id="salesTrend">7 dias</span>
+          </div>
+          <div class="bar-chart" id="salesChart" aria-label="Grafico de barras de ventas"></div>
+        </article>
+
+        <article class="panel donut-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Gastos</p>
+              <h2>Gastos por categoria</h2>
+            </div>
+          </div>
+          <div class="donut-layout">
+            <div class="donut" id="expenseDonut" aria-hidden="true"></div>
+            <div class="legend" id="expenseLegend"></div>
+          </div>
+          <div class="panel-total">
+            <span>Total</span>
+            <strong id="expenseTotal">{{ expense_total|soles }}</strong>
+          </div>
+        </article>
+
+        <article class="panel month-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">Finanzas</p>
+              <h2>Resumen del mes</h2>
+            </div>
+          </div>
+          <dl class="month-list">
+            <div><dt>Total ingresos</dt><dd class="positive" id="monthIncome">{{ month_summary.income|soles }}</dd></div>
+            <div><dt>Total egresos</dt><dd class="negative" id="monthExpense">{{ month_summary.expense|soles }}</dd></div>
+            <div><dt>Ganancia ventas</dt><dd id="monthGrossProfit">{{ month_summary.gross_profit|soles }}</dd></div>
+            <div><dt>Ganancia neta</dt><dd id="monthProfit">{{ month_summary.profit|soles }}</dd></div>
+            <div><dt>Ventas realizadas</dt><dd id="monthSales">{{ month_summary.sales_count }}</dd></div>
+            <div><dt>Clientes atendidos</dt><dd id="monthClients">{{ month_summary.clients_count }}</dd></div>
+          </dl>
+        </article>
+
+        <article class="panel exports-panel wide-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Reportes Excel</p>
+              <h2>Descargas del dia</h2>
+            </div>
+            <span class="trend-pill">{{ date_label }}</span>
+          </div>
+          <div class="export-grid">
+            <a href="{{ url_for('exportar_reporte', modulo='pedidos', fecha=selected_date) }}">Pedidos</a>
+            <a href="{{ url_for('exportar_reporte', modulo='ventas', fecha=selected_date) }}">Ventas</a>
+            <a href="{{ url_for('exportar_reporte', modulo='gastos', fecha=selected_date) }}">Gastos</a>
+            <a href="{{ url_for('exportar_reporte', modulo='inventario', fecha=selected_date) }}">Inventario</a>
+            <a href="{{ url_for('exportar_reporte', modulo='liquidaciones', fecha=selected_date) }}">Liquidaciones</a>
+            <a href="{{ url_for('exportar_reporte', modulo='fiados', fecha=selected_date) }}">Fiados</a>
+            <a href="{{ url_for('exportar_reporte', modulo='repartidores', fecha=selected_date) }}">Repartidores</a>
+            <a href="{{ url_for('exportar_reporte', modulo='fises', fecha=selected_date) }}">FISES</a>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <form class="modal-content dashboard-form" id="editForm" method="post">
+        <div class="modal-header">
+          <h2 class="modal-title" id="editModalTitle">Editar registro</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="fecha" value="{{ selected_date }}">
+          <div class="row g-3" id="editFields"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="primary-button">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content dashboard-form" id="deleteForm" method="post">
+        <div class="modal-header">
+          <h2 class="modal-title" id="deleteModalTitle">Confirmar accion</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="fecha" value="{{ selected_date }}">
+          <p id="deleteModalText" class="mb-0">Seguro que deseas eliminar este registro?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="primary-button danger-submit">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="creditPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <form class="modal-content dashboard-form" id="creditPaymentForm" method="post">
+        <div class="modal-header">
+          <h2 class="modal-title" id="creditPaymentTitle">Liquidar deuda</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="calculation-strip liquidation-strip mb-3">
+            <span>Cliente: <strong id="creditPaymentClient">-</strong></span>
+            <span>Pendiente: <strong id="creditPaymentPending">S/ 0.00</strong></span>
+            <span>Pagando: <strong id="creditPaymentAmountPreview">S/ 0.00</strong></span>
+            <span>Saldo: <strong id="creditPaymentBalancePreview">S/ 0.00</strong></span>
+            <span>FISES: <strong id="creditPaymentFisePreview">0 / S/ 0.00</strong></span>
+            <span>Estado: <strong id="creditPaymentStatusPreview">Pendiente</strong></span>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="creditPaymentDate">Fecha de pago</label>
+              <input class="form-control credit-payment-calculator" id="creditPaymentDate" name="fecha_pago" type="date" value="{{ selected_date }}" required>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditPaymentMethod">Metodo de pago</label>
+              <select class="form-select credit-payment-calculator" id="creditPaymentMethod" name="metodo_pago">
+                <option value="mixto">Mixto</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="yape">Yape</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="fise">FISE</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditCash">Efectivo</label>
+              <input class="form-control credit-payment-calculator" id="creditCash" name="pago_efectivo" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditYape">Yape</label>
+              <input class="form-control credit-payment-calculator" id="creditYape" name="pago_yape" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditTransfer">Transferencia</label>
+              <input class="form-control credit-payment-calculator" id="creditTransfer" name="pago_transferencia" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditFise">FISE</label>
+              <input class="form-control credit-payment-calculator" id="creditFise" name="pago_fise" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditFise20">FISE S/ 20</label>
+              <input class="form-control credit-payment-calculator" id="creditFise20" name="fise_20_cantidad" type="number" min="0" step="1" value="0">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="creditFise43">FISE S/ 43</label>
+              <input class="form-control credit-payment-calculator" id="creditFise43" name="fise_43_cantidad" type="number" min="0" step="1" value="0">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="creditPaymentObservations">Observaciones</label>
+              <input class="form-control" id="creditPaymentObservations" name="observaciones" type="text">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="primary-button">Registrar pago</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    window.dashboardData = {{ dashboard_data|tojson }};
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

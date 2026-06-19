@@ -1,0 +1,316 @@
+CREATE TABLE IF NOT EXISTS repartidores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    telefono TEXT,
+    activo INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS precios_gas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL UNIQUE,
+    costo_balon REAL NOT NULL,
+    precio_venta REAL NOT NULL,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ventas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    cliente TEXT,
+    repartidor TEXT,
+    repartidor_id INTEGER,
+    cantidad INTEGER NOT NULL DEFAULT 1,
+    producto TEXT,
+    tipo_valvula TEXT,
+    costo_balon REAL NOT NULL DEFAULT 0,
+    precio_venta REAL NOT NULL DEFAULT 0,
+    total_costo REAL NOT NULL DEFAULT 0,
+    total_venta REAL NOT NULL DEFAULT 0,
+    ganancia REAL NOT NULL DEFAULT 0,
+    pago_efectivo REAL NOT NULL DEFAULT 0,
+    pago_yape REAL NOT NULL DEFAULT 0,
+    pago_yape_marcos REAL NOT NULL DEFAULT 0,
+    pago_plin REAL NOT NULL DEFAULT 0,
+    pago_fise REAL NOT NULL DEFAULT 0,
+    pago_fiado REAL NOT NULL DEFAULT 0,
+    pago_vuelto_yape REAL NOT NULL DEFAULT 0,
+    dinero_entregado REAL NOT NULL DEFAULT 0,
+    dinero_pendiente REAL NOT NULL DEFAULT 0,
+    monto REAL NOT NULL DEFAULT 0,
+    pedido_id INTEGER,
+    items_resumen TEXT,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id),
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
+);
+
+CREATE TABLE IF NOT EXISTS pedidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    cliente TEXT NOT NULL,
+    telefono TEXT,
+    direccion TEXT NOT NULL,
+    cantidad INTEGER NOT NULL DEFAULT 1,
+    producto TEXT NOT NULL DEFAULT 'BALON DE GAS 10 KG',
+    tipo_valvula TEXT,
+    costo_producto REAL NOT NULL DEFAULT 0,
+    precio_venta REAL NOT NULL DEFAULT 0,
+    ganancia_estimada REAL NOT NULL DEFAULT 0,
+    items_resumen TEXT,
+    observaciones TEXT,
+    estado TEXT NOT NULL DEFAULT 'pendiente',
+    repartidor_id INTEGER,
+    despacho_observaciones TEXT,
+    entregado_at TEXT,
+    liquidado_at TEXT,
+    venta_id INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id),
+    FOREIGN KEY (venta_id) REFERENCES ventas(id)
+);
+
+CREATE TABLE IF NOT EXISTS pedido_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pedido_id INTEGER NOT NULL,
+    producto TEXT NOT NULL,
+    tipo_valvula TEXT,
+    cantidad INTEGER NOT NULL DEFAULT 1,
+    costo_unitario REAL NOT NULL DEFAULT 0,
+    precio_unitario REAL NOT NULL DEFAULT 0,
+    total_costo REAL NOT NULL DEFAULT 0,
+    total_venta REAL NOT NULL DEFAULT 0,
+    ganancia REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
+);
+
+CREATE TABLE IF NOT EXISTS venta_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venta_id INTEGER NOT NULL,
+    producto TEXT NOT NULL,
+    tipo_valvula TEXT,
+    cantidad INTEGER NOT NULL DEFAULT 1,
+    costo_unitario REAL NOT NULL DEFAULT 0,
+    precio_unitario REAL NOT NULL DEFAULT 0,
+    total_costo REAL NOT NULL DEFAULT 0,
+    total_venta REAL NOT NULL DEFAULT 0,
+    ganancia REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venta_id) REFERENCES ventas(id)
+);
+
+CREATE TABLE IF NOT EXISTS auditoria_cambios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tabla TEXT NOT NULL,
+    registro_id INTEGER NOT NULL,
+    accion TEXT NOT NULL,
+    detalle TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS pagos_venta (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venta_id INTEGER NOT NULL,
+    tipo TEXT NOT NULL,
+    monto REAL NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venta_id) REFERENCES ventas(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pagos_venta_unico
+ON pagos_venta (venta_id, tipo);
+
+CREATE TABLE IF NOT EXISTS gastos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    concepto TEXT NOT NULL,
+    categoria TEXT NOT NULL,
+    monto REAL NOT NULL,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventario (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    llenos INTEGER NOT NULL DEFAULT 0,
+    vacios INTEGER NOT NULL DEFAULT 0,
+    prestados_clientes INTEGER NOT NULL DEFAULT 0,
+    prestados_mayoristas INTEGER NOT NULL DEFAULT 0,
+    entradas_mes INTEGER NOT NULL DEFAULT 0,
+    salidas_mes INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventario_agua (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    llenos INTEGER NOT NULL DEFAULT 0,
+    vacios INTEGER NOT NULL DEFAULT 0,
+    entradas_mes INTEGER NOT NULL DEFAULT 0,
+    salidas_mes INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS stock_diario (
+    fecha TEXT PRIMARY KEY,
+    inicio_llenos INTEGER NOT NULL DEFAULT 0,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prestamos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    cliente TEXT NOT NULL,
+    tipo_cliente TEXT NOT NULL,
+    tipo_balon TEXT NOT NULL DEFAULT 'lleno',
+    cantidad INTEGER NOT NULL,
+    devueltos INTEGER NOT NULL DEFAULT 0,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_inventario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    tipo TEXT NOT NULL,
+    cantidad_llenos INTEGER NOT NULL DEFAULT 0,
+    cantidad_vacios INTEGER NOT NULL DEFAULT 0,
+    cantidad_prestados_clientes INTEGER NOT NULL DEFAULT 0,
+    cantidad_prestados_mayoristas INTEGER NOT NULL DEFAULT 0,
+    referencia TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_agua (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    tipo TEXT NOT NULL,
+    cantidad_llenos INTEGER NOT NULL DEFAULT 0,
+    cantidad_vacios INTEGER NOT NULL DEFAULT 0,
+    referencia TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS pagos_repartidores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    repartidor_id INTEGER NOT NULL,
+    monto REAL NOT NULL,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id)
+);
+
+CREATE TABLE IF NOT EXISTS liquidaciones_repartidores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    repartidor_id INTEGER NOT NULL,
+    debe_entregar REAL NOT NULL DEFAULT 0,
+    entregado REAL NOT NULL DEFAULT 0,
+    diferencia REAL NOT NULL DEFAULT 0,
+    vuelto_yape REAL NOT NULL DEFAULT 0,
+    fise_20_cantidad INTEGER NOT NULL DEFAULT 0,
+    fise_43_cantidad INTEGER NOT NULL DEFAULT 0,
+    total_fise_cantidad INTEGER NOT NULL DEFAULT 0,
+    total_fise_valor REAL NOT NULL DEFAULT 0,
+    pedido_id INTEGER,
+    venta_id INTEGER,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id),
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+    FOREIGN KEY (venta_id) REFERENCES ventas(id)
+);
+
+CREATE TABLE IF NOT EXISTS fises_repartidores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    repartidor_id INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL DEFAULT 0,
+    cantidad_20 INTEGER NOT NULL DEFAULT 0,
+    cantidad_43 INTEGER NOT NULL DEFAULT 0,
+    total_fise REAL NOT NULL DEFAULT 0,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id)
+);
+
+CREATE TABLE IF NOT EXISTS fise_entregas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    repartidor_id INTEGER NOT NULL,
+    cantidad_20 INTEGER NOT NULL DEFAULT 0,
+    cantidad_43 INTEGER NOT NULL DEFAULT 0,
+    cantidad_total INTEGER NOT NULL DEFAULT 0,
+    total_fise REAL NOT NULL DEFAULT 0,
+    estado TEXT NOT NULL DEFAULT 'entregada',
+    entregado_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario TEXT,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id)
+);
+
+CREATE TABLE IF NOT EXISTS fiado_pagos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venta_id INTEGER NOT NULL,
+    fecha_pago TEXT NOT NULL,
+    metodo_pago TEXT NOT NULL,
+    pago_efectivo REAL NOT NULL DEFAULT 0,
+    pago_yape REAL NOT NULL DEFAULT 0,
+    pago_transferencia REAL NOT NULL DEFAULT 0,
+    pago_fise REAL NOT NULL DEFAULT 0,
+    fise_20_cantidad INTEGER NOT NULL DEFAULT 0,
+    fise_43_cantidad INTEGER NOT NULL DEFAULT 0,
+    total_pagado REAL NOT NULL DEFAULT 0,
+    usuario TEXT,
+    observaciones TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venta_id) REFERENCES ventas(id)
+);
+
+CREATE TABLE IF NOT EXISTS cuentas_bancarias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT NOT NULL UNIQUE,
+    nombre TEXT NOT NULL,
+    activo INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS saldos_diarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    cuenta_id INTEGER NOT NULL,
+    saldo_inicial REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (fecha, cuenta_id),
+    FOREIGN KEY (cuenta_id) REFERENCES cuentas_bancarias(id)
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_cuentas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    cuenta_id INTEGER NOT NULL,
+    tipo TEXT NOT NULL,
+    monto REAL NOT NULL,
+    referencia TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cuenta_id) REFERENCES cuentas_bancarias(id)
+);
+
+CREATE TABLE IF NOT EXISTS ganancias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venta_id INTEGER UNIQUE,
+    fecha TEXT NOT NULL,
+    repartidor_id INTEGER,
+    ganancia REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (venta_id) REFERENCES ventas(id),
+    FOREIGN KEY (repartidor_id) REFERENCES repartidores(id)
+);
